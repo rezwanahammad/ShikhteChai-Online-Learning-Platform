@@ -3,13 +3,15 @@ import React from 'react'
 import { AppSidebar } from './_components/AppSidebar'
 import AppHeader from './_components/AppHeader'
 
-const WorkspaceProvider = ({ children }) => {
+function WorkspaceProvider({ children }){
   return (
     <SidebarProvider>
         <AppSidebar />
     <div className='w-full'>
         <AppHeader />
-      {children}
+        <div className='p-10'>
+            {children}
+        </div>
     </div>
   </SidebarProvider>
   )
