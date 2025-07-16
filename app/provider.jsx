@@ -31,13 +31,14 @@
 
 
 "use client";
+import React, { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import axios from 'axios';
-import React, { useEffect } from 'react';
+import { UserDetailContext } from '../context/UserDetailContext';
 
 const Provider = ({ children }) => {
-
   const { user } = useUser();
+  const [userDetail, setUserDetail] = useState();
 
   useEffect(() => {
     if (user) {
@@ -83,17 +84,17 @@ const Provider = ({ children }) => {
         email,
       });
       console.log("✅ User creation API response:", result.data);
+      setUserDetail(result.data);
     } catch (error) {
       console.error("❌ Error creating user:", error);
     }
   }
 
   return (
-    <div>
+    <UserDetailContext.Provider value={{ userDetail, setUserDetail }}>
       {children}
-    </div>
+    </UserDetailContext.Provider>
   );
 };
 
 export default Provider;
-
