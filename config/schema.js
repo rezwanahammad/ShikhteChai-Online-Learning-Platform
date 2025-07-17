@@ -10,12 +10,12 @@ export const usersTable = pgTable("users", {
 export const coursesTable = pgTable("courses", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   userId: integer().references(() => usersTable.id).notNull(),
-  name: varchar(),
   courseName: varchar({ length: 255 }).notNull(),
   courseDescription: varchar({ length: 255 }).notNull(),
   noOfChapters: integer().notNull(),
   includeVideo: boolean().notNull(),
   difficultyLevel: varchar({ length: 50 }).notNull(),
   courseJson: json().notNull(),
+  bannerImageUrl: varchar({ length: 500 }).default(""),
   userEmail: varchar({ length: 255 }).references(() => usersTable.email)
 });

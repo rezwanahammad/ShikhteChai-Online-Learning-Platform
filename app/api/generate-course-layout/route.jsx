@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { db } from '../../../config/db';
 import { coursesTable, usersTable } from '../../../config/schema';
 import { eq } from 'drizzle-orm';
+import axios from 'axios';
 
 
 const PROMPT=`Genrate Learning Course depends on following
@@ -83,8 +84,33 @@ export async function POST(req) {
     });
     console.log(response.candidates[0].content.parts[0].text);
     const RawResp= response?.candidates[0]?.content?.parts[0]?.text;
+    
+    if (!RawResp) {
+        return NextResponse.json({ error: "No response from AI" }, { status: 500 });
+    }
+    
     const RawJson=RawResp.replace('```json','').replace('```','');
-    const JSONResp=JSON.parse(RawJson);
+    
+    let JSONResp;
+    try {
+        JSONResp=JSON.parse(RawJson);
+    } catch (parseError) {
+        console.error("JSON parsing error:", parseError);
+        console.error("Raw JSON:", RawJson);
+        return NextResponse.json({ error: "Failed to parse AI response" }, { status: 500 });
+    }
+
+    const imagePrompt = JSONResp.course?.bannerimagePrompt || "A modern educational course banner";
+    
+    // generate image
+    let bannerImageUrl = "";
+    try {
+        bannerImageUrl = await GenerateImage(imagePrompt);
+    } catch (imageError) {
+        console.error("Image generation error:", imageError);
+        // Continue without image if image generation fails
+        bannerImageUrl = "";
+    }
 
     //infomation save to database
     try {
@@ -103,7 +129,8 @@ export async function POST(req) {
             includeVideo: formData.includeVideo,
             difficultyLevel: formData.difficultyLevel,
             courseJson: JSONResp,
-            userEmail: user.primaryEmailAddress.emailAddress
+            userEmail: user.primaryEmailAddress.emailAddress,
+            bannerImageUrl: bannerImageUrl
         }).returning();
 
         console.log("Database insert result:", result);
@@ -112,4 +139,24 @@ export async function POST(req) {
         console.error("Database error:", error);
         return NextResponse.json({ error: "Failed to save course", details: error.message }, { status: 500 });
     }
+    }
+
+    const GenerateImage=async(imagePrompt)=>{
+        const BASE_URL='https://aigurulab.tech';
+const result = await axios.post(BASE_URL+'/api/generate-image',
+        {
+            width: 1024,
+            height: 1024,
+            input: imagePrompt,
+            model: 'sdxl',//'flux'
+            aspectRatio:"16:9"//Applicable to Flux model only
+        },
+        {
+            headers: {
+                'x-api-key': process?.env?.AI_GURU_LAB_API, // Your API Key
+                'Content-Type': 'application/json', // Content Type
+            },
+        })
+        console.log(result.data.image) //Output Result: Base 64 Image
+        return result.data.image;
     }
