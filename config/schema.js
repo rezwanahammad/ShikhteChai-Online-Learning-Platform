@@ -10,6 +10,7 @@ export const usersTable = pgTable("users", {
 export const coursesTable = pgTable("courses", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   userId: integer().references(() => usersTable.id).notNull(),
+  courseId: varchar({ length: 255 }).notNull().unique(),
   courseName: varchar({ length: 255 }).notNull(),
   courseDescription: varchar({ length: 255 }).notNull(),
   noOfChapters: integer().notNull(),
