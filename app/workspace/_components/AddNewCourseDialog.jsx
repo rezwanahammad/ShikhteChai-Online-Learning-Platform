@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 
 import {
   Dialog,
@@ -19,9 +20,20 @@ import {
   SelectValue,
 } from "../../../@/components/ui/select"
 import { Button } from "../../../@/components/ui/button"
+import { Loader2Icon, Sparkle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+// Simple UUID generator that works in browser
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 const AddNewCourseDialog = ({children}) => {
-
+  const[loading,setLoading]=useState(false); 
   const[formData, setFormData] = useState({
     courseName: '',
     courseDescription: '',
@@ -29,6 +41,8 @@ const AddNewCourseDialog = ({children}) => {
     includeVideo: false,
     difficultyLevel: ''
   });
+
+  const router=useRouter();
 
   const onHandleInputChange = (field,value) => {
     setFormData(prev=>({
@@ -38,8 +52,29 @@ const AddNewCourseDialog = ({children}) => {
     console.log("Form Data: ", formData);
   }
 
-  const onGenerate=()=>{
+  const onGenerate=async()=>{
     console.log(formData);
+    const courseId=generateUUID();
+    setLoading(true);
+    try {
+      const result = await axios.post('/api/generate-course-layout', {
+        ...formData,
+        courseId:courseId
+      });
+      console.log(result.data);
+      setLoading(false);
+      
+      if (result.data.success) {
+        router.push('/workspace/edit-course/' + result.data.courseId);
+      } else {
+        console.error("Failed to generate course:", result.data.error);
+        alert("Failed to generate course. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error generating course:", error);
+      setLoading(false);
+      alert("An error occurred while generating the course. Please try again.");
+    }
   }
 
   return (
@@ -68,7 +103,7 @@ const AddNewCourseDialog = ({children}) => {
 
           <div className='flex items-center gap-2'>
             <label>Include video </label>
-            <Switch onCheckedChange={()=>onHandleInputChange("includeVideo", !formData.includeVideo)} />
+            <Switch onCheckedChange={(checked)=>onHandleInputChange("includeVideo", checked)} />
           </div>
           <div>
             <label >Difficulty Level</label>
@@ -85,7 +120,7 @@ const AddNewCourseDialog = ({children}) => {
           </div>
 
           <div className='flex items-center gap-2 justify-center'>
-            <Button onClick={onGenerate}>Generate Course</Button>
+            <Button onClick={onGenerate}>{loading?<Loader2Icon className="animate-spin" />:<Sparkle/>}Generate Course</Button>
           </div>
 
 
