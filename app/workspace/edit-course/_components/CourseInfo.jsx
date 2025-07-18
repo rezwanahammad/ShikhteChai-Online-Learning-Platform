@@ -1,10 +1,33 @@
 import { Button } from '../../../../@/components/ui/button';
-import { Book, Clock, DiffIcon } from 'lucide-react';
+import { Book, Clock, DiffIcon, Loader2Icon } from 'lucide-react';
 import Image from 'next/image';
-import React from 'react'
+import React, { useState } from 'react'
+import axios from 'axios';
 
 const CourseInfo = ({ course }) => {
     const courseLayout = course ?.courseJson?.course;
+    const  [loading, setLoading] = useState(false);
+    const GenerateCourseContent=async()=>{
+
+        setLoading(true);
+        try{
+            const result = await axios.post('/api/generate-course-content', {
+                courseJson: courseLayout,
+                courseTitle: courseLayout?.name,
+                courseId: course?.id
+            });
+            console.log(result.data);
+            setLoading(false);
+            alert("Course content generated successfully!");
+        }
+        catch(error){
+            console.error("Error generating course content:", error);
+            setLoading(false);
+            alert("An error occurred while generating the course content. Please try again.");
+        }
+        
+    }
+
   return (
   <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md mx-auto">
   <div className="space-y-4">
@@ -48,7 +71,10 @@ const CourseInfo = ({ course }) => {
   )}
 
 <div className="mt-6 flex justify-center">
-        <Button>Generate Course</Button>
+        <Button onClick={GenerateCourseContent} disabled={loading}>
+            {loading ? <Loader2Icon className="animate-spin mr-2" /> : null}
+            {loading ? 'Generating...' : 'Generate Course Content'}
+        </Button>
       </div>
 
 </div>
