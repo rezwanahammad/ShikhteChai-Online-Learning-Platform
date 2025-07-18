@@ -3,10 +3,12 @@ import { Book, Clock, DiffIcon, Loader2Icon } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState } from 'react'
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const CourseInfo = ({ course }) => {
     const courseLayout = course ?.courseJson?.course;
     const  [loading, setLoading] = useState(false);
+    const router = useRouter();
     const GenerateCourseContent=async()=>{
 
         setLoading(true);
@@ -18,7 +20,7 @@ const CourseInfo = ({ course }) => {
             });
             console.log(result.data);
             setLoading(false);
-            alert("Course content generated successfully!");
+            router.replace('/workspace'); 
         }
         catch(error){
             console.error("Error generating course content:", error);

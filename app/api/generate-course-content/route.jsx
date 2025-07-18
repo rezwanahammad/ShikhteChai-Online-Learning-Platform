@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from '@google/genai';
+import axios from "axios";
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
@@ -27,10 +28,6 @@ Return the response in valid JSON format with the following schema:
 }
 
 User Input:`;
-
-
-
-
 
 
 export async function POST(req) {
@@ -103,7 +100,14 @@ export async function POST(req) {
                     };
                 }
 
-                return JSONResponse;
+
+                //GET YOUTUBE VIDEOS
+
+                const youtubeData = await GetYoutubeVideo(chapter.chapterName);
+                return {
+                    youtubeVideo: youtubeData,
+                    courseData: JSONResponse
+                };
                 
             } catch (chapterError) {
                 console.error(`Error processing chapter ${index + 1}:`, chapterError);
@@ -128,5 +132,40 @@ export async function POST(req) {
             { error: "Internal server error: " + error.message }, 
             { status: 500 }
         );
+    }
+}
+
+
+const YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3/search";
+const GetYoutubeVideo=async(topic)=>{
+    try {
+        const params = {
+            part: 'snippet',
+            q: topic,
+            maxResults: 4,  // Fixed typo: was maxResult
+            type: 'video',
+            key: process.env.YOUTUBE_API_KEY
+        }
+
+        if (!process.env.YOUTUBE_API_KEY) {
+            console.log("YouTube API key not found, returning empty array");
+            return [];
+        }
+
+        const resp = await axios.get(YOUTUBE_BASE_URL, { params });
+        const youtubeVideoListResp = resp.data.items;
+        const youtubeVideoList = [];
+        youtubeVideoListResp.forEach(item => {
+            const data={
+                videoId: item?.id?.videoId,
+                title: item?.snippet?.title,
+            }
+            youtubeVideoList.push(data);
+        });
+        console.log("YouTube videos found:", youtubeVideoList);
+        return youtubeVideoList;
+    } catch (error) {
+        console.error("Error fetching YouTube videos:", error);
+        return [];
     }
 }
