@@ -123,7 +123,6 @@ export async function POST(req) {
 
         const result = await db.insert(coursesTable).values({
             userId: users[0].id,
-            courseId: courseId,
             courseName: formData.courseName,
             courseDescription: formData.courseDescription,
             noOfChapters: parseInt(formData.noOfChapters),
@@ -131,11 +130,11 @@ export async function POST(req) {
             difficultyLevel: formData.difficultyLevel,
             courseJson: JSONResp,
             userEmail: user.primaryEmailAddress.emailAddress,
-            bannerImageUrl: bannerImageUrl || ""
+            bannerImageUrl: bannerImageUrl
         }).returning();
 
         console.log("Database insert result:", result);
-        return NextResponse.json({ success: true, courseId: result[0].courseId, course: result[0] });
+        return NextResponse.json({ success: true, courseId: result[0].id, course: result[0] });
     } catch (error) {
         console.error("Database error:", error);
         return NextResponse.json({ error: "Failed to save course", details: error.message }, { status: 500 });
