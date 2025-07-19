@@ -18,5 +18,12 @@ export const coursesTable = pgTable("courses", {
   difficultyLevel: varchar({ length: 50 }).notNull(),
   courseJson: json().notNull(),
   bannerImageUrl: varchar({ length: 500 }).default(""),
-  userEmail: varchar({ length: 255 }).references(() => usersTable.email)
+  userEmail: varchar({ length: 255 }).references(() => usersTable.email).notNull()
+});
+
+export const enrollCourseTable = pgTable("enroll_course", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  courseId: varchar('courseId').references(() => coursesTable.courseId),
+  userEmail: varchar({ length: 255 }).references(() => usersTable.email).notNull(),
+  completedChapters:json()
 });
